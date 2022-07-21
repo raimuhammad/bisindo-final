@@ -1,0 +1,58 @@
+enum QuizType {
+  IMAGE_MATCH
+  LETTER_SEQUENCE
+  MULTIPLE_CHOICE
+}
+
+type MultipleChoise @model(class: "App\\Models\\QuizMetadata") {
+  id: ID!
+  image: String!
+  text: String!
+  index: Int!
+}
+input MultipleChoiseInput {
+  index: Int!
+  image: Upload
+  text: String
+}
+type Quiz {
+  id: ID!
+  video_id: String!
+  created_at: DateTime!
+  updated_at: DateTime
+  show_at: Float!
+  type: QuizType!
+  choises: [MultipleChoise!]!
+
+  question: String!
+  questionAnswer: Int!
+  additional_image: String!
+  image_matcher: String!
+}
+
+extend type Mutation {
+  quizDelete(id: ID! @eq): Quiz @delete
+  multipleChoiseQuiz(
+    video_id: String! @rules(apply: ["required", "exists:videos,id"])
+    show_at: Int! @rules(apply: ["required", "min:1"])
+    options: [MultipleChoiseInput!]!
+    answer: Int! @rules(apply: ["required", "in:0,1,2,3"])
+    additionalFile: Upload
+    question: String!
+  ): Quiz! @field(resolver: "App\\GraphQL\\QuizResolver@create")
+  imageMatchQuiz(
+    video_id: String! @rules(apply: ["required", "exists:videos,id"])
+    show_at: Int! @rules(apply: ["required", "min:1"])
+    text: String! @rules(apply: ["required"])
+  ): Quiz! @field(resolver: "App\\GraphQL\\QuizResolver@create")
+  letterSequenceQuiz(
+    video_id: String! @rules(apply: ["required", "exists:videos,id"])
+    show_at: Int! @rules(apply: ["required", "min:1"])
+    text: String! @rules(apply: ["required"])
+  ): Quiz! @field(resolver: "App\\GraphQL\\QuizResolver@create")
+}
+extend type Query {
+  quizes(videoId: String! @where(key: "video_id")): [Quiz!]!
+    @orderBy(column: "created_at", direction: ASC)
+    @paginate
+}

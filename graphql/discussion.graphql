@@ -1,0 +1,38 @@
+type Discussion {
+  id: ID!
+  user_id: String!
+  user: User!
+  content: String!
+  replies: [DiscussionReply]!
+  created_at: Date!
+  updated_at: Date
+}
+
+type DiscussionReply {
+  id: ID!
+  user_id: String!
+  user: User!
+  discussion: Discussion!
+  content: String!
+  created_at: Date!
+  updated_at: Date
+}
+
+extend type Query {
+  discussion(grade_id: ID! @where): [Discussion!]
+    @orderBy(column: "created_at", direction: DESC)
+    @paginate
+}
+
+extend type Mutation {
+  discussion(grade_id: ID!, user_id: ID!, content: String!): Discussion! @create
+  discussionReply(
+    user_id: ID!
+    discussion_id: ID!
+    content: String!
+  ): DiscussionReply! @create
+  updateDiscussion(id: ID! @eq, content: String!): Discussion! @update
+  updateDiscussionReply(id: ID! @eq, content: String!): DiscussionReply! @update
+  deleteDiscussion(id: ID!): Discussion @delete
+  deleteDiscussionReply(id: ID!): DiscussionReply @delete
+}

@@ -1,0 +1,40 @@
+type Grade {
+  id: ID!
+  student_count: Int!
+  video_count: Int!
+  name: String!
+  students: [StudentGrade!]!
+  videos: [Video!]!
+  created_at: Date!
+  updated_at: Date
+}
+type VideoGrade {
+  id: ID!
+  created_at: Date!
+  updated_at: Date
+  video_id: String!
+  grade_id: String!
+}
+
+extend type Mutation {
+  grade(name: String!): Grade @create
+  gradeEdit(id: ID! @eq, name: String): Grade @update
+  addVideoInGrade(
+    video_id: ID! @rules(apply: ["exists:videos,id"])
+    grade_id: ID! @rules(apply: ["exists:grades,id"])
+  ) : VideoGrade @create
+  gradeDelete(id: ID!) : Grade @delete
+}
+extend type Query {
+  grades(search: String @where(key: "name", operator: "like")): [Grade!]!
+    @orderBy(column: "created_at", direction: DESC)
+    @paginate
+  gradeAll: [Grade!]! @orderBy(column: "name", direction: ASC) @all
+  getStudentByGrade(grade_id: ID! @where): [StudentGrade!]!
+    @orderBy(column: "created_at", direction: DESC)
+    @paginate
+  gradeById(id: ID! @eq): Grade @find
+  gradeQuizes(
+    grade_id: ID! @builder(method: "App\\GraphQL\\StudentGradeResolver@quiz")
+  ): [Quiz] @all
+}
